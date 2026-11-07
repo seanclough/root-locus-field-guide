@@ -226,6 +226,32 @@ button.play svg { width: 12px; height: 12px; fill: currentColor; }
 .tab-note { font-size: 0.94rem; }
 .uses { margin: 0; padding-left: 1.15em; display: grid; gap: 10px; }
 .uses li::marker { color: var(--pencil); }
+.dsbench { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: start; margin-top: 18px; }
+.dsrow { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; font: 500 13px/1.2 var(--font-mono); color: var(--ink-2); }
+.dsrow select { font: 500 13px/1 var(--font-mono); padding: 6px 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--sheet); color: var(--ink); max-width: 100%; }
+.minih { font: 600 1.05rem/1.2 var(--font-display); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-2); }
+.spec-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.spec-grid label { display: grid; gap: 4px; font: 500 12px/1.2 var(--font-mono); color: var(--ink-2); }
+.spec-grid input, .elval input { font: 500 13px/1 var(--font-mono); padding: 6px 7px; border: 1px solid var(--line); border-radius: 3px; background: var(--sheet); color: var(--ink); width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+.elval input { width: 9.5ch; }
+.mtable { width: 100%; border-collapse: collapse; font: 500 12.5px/1.3 var(--font-mono); font-variant-numeric: tabular-nums; }
+.mtable th { text-align: left; font-weight: 600; color: var(--ink-2); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.mtable td { padding: 6px 4px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.mtable td.pass { color: var(--ok); } .mtable td.fail { color: var(--bad); }
+.eltable { display: grid; border-top: 1px solid var(--line); }
+.elrow { display: grid; grid-template-columns: 16px minmax(4.5em, auto) minmax(0, 1fr) auto 28px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font: 500 12.5px/1.2 var(--font-mono); color: var(--ink-2); }
+.elrow .sym { font-weight: 700; color: var(--ink); font-size: 15px; }
+.elrow.free .sym { color: var(--pencil); }
+.elval { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.pinbtn { font: 600 11.5px/1 var(--font-mono); padding: 6px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--sheet); cursor: pointer; min-width: 7.5ch; }
+.pinbtn[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+.pinbtn[aria-pressed="false"] { color: var(--pencil); border-color: var(--pencil); }
+.pinbtn:focus-visible, .elx:focus-visible { outline: 2px solid var(--pencil); outline-offset: 1px; }
+.elx { font: 600 12px/1 var(--font-mono); width: 26px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: var(--sheet); color: var(--ink-2); cursor: pointer; }
+.sw-blue { border-top: 2.3px solid var(--pen1); }
+.sw-band { width: 16px; height: 10px; background: var(--ok-bg); box-shadow: inset 0 0 0 1px var(--line); }
+.facts-list b.bad { color: var(--bad); }
+@media (max-width: 860px) { .dsbench { grid-template-columns: minmax(0, 1fr); } }
 .subcanvas { display: block; width: 100%; background: var(--sheet); box-shadow: 0 0 0 1px var(--line); border-radius: 3px; }
 .zeta-row { display: flex; align-items: center; gap: 10px; font: 500 13px/1 var(--font-mono); color: var(--ink-2); }
 .zeta-row input { flex: 1; min-width: 0; accent-color: var(--pencil); }
@@ -308,6 +334,7 @@ main.wrap { padding-bottom: 56px; }
     <li><a href="#shapes">Common shapes</a></li>
     <li><a href="#edges">Edge cases</a></li>
     <li><a href="#playground">Playground</a></li>
+    <li><a href="#design">Design bench</a></li>
     <li><a href="#checklist">Checklist</a></li>
   </ul>
 </nav>
@@ -559,6 +586,61 @@ main.wrap { padding-bottom: 56px; }
       <div class="panel">
         <div class="tfbox"><div class="tf" id="pg-tf"></div></div>
         <ul class="facts-list" id="pg-facts"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DESIGN BENCH ===================== -->
+  <section id="design">
+    <div class="stack read">
+      <h2>Design bench</h2>
+      <p>The playground goes from poles and zeros to closed-loop poles. Design runs the other way: you know where the closed-loop poles should be, and you need the controller and the gain that put them there. This bench does that with the angle and magnitude conditions, live.</p>
+    </div>
+    <ol class="steps" style="margin-top:16px">
+      <li><span><b>Set the problem.</b> Pick a plant, or edit its poles and zeros in the table. Type the specs: the green region is where the dominant poles have to sit.</span></li>
+      <li><span><b>Pick a controller.</b> Its poles and zeros appear on the plot, marked <span class="mono">c</span>. Red ones are free, so the bench moves them; black ones are pinned. Click any × or ○ to pin or free it, or drag it yourself.</span></li>
+      <li><span><b>Place the closed-loop pole.</b> Drag the held pole (red ring) anywhere. The bench moves the free elements and solves for K so the locus passes exactly through it. Click other closed-loop poles to hold them too, as long as there are enough free elements. Drag the empty background, or hold the middle mouse button, to pan.</span></li>
+      <li><span><b>Check the response.</b> The dashed step response is the second-order estimate from the dominant pair; the solid one is the real closed loop. The table shows which specs each one meets.</span></li>
+    </ol>
+    <div class="dsbench">
+      <div class="stack">
+        <div class="dsrow">
+          <label for="ds-problem">Problem</label><select id="ds-problem"></select>
+          <label for="ds-scheme">Controller</label><select id="ds-scheme"></select>
+        </div>
+        <p class="tab-note" id="ds-note"></p>
+        <p class="hint" id="ds-scheme-note"></p>
+        <div class="dsrow">
+          <button class="btn" type="button" id="ds-corner">Hold the spec corner</button>
+          <button class="btn" type="button" id="ds-zin" aria-label="Zoom in">＋</button>
+          <button class="btn" type="button" id="ds-zout" aria-label="Zoom out">−</button>
+          <label class="snapchk"><input type="checkbox" id="ds-snap" checked> snap to grid</label>
+        </div>
+        <div id="plot-ds"></div>
+        <p class="hint" id="ds-msg" aria-live="polite"></p>
+        <div class="stack" style="gap:6px">
+          <h3 class="minih">Step response</h3>
+          <div><canvas class="subcanvas" id="ds-step" aria-label="Closed-loop unit step response with spec limits"></canvas></div>
+          <div class="chart-key" aria-hidden="true"><span><i class="sw sw-blue"></i>actual closed loop</span><span><i class="sw sw-dash"></i>second-order estimate</span><span><i class="sw sw-k"></i>spec limits</span><span><i class="sw sw-band"></i>2% band</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="spec-grid">
+          <label>%OS ≤<input type="number" id="ds-os" min="0.1" max="95" step="1"></label>
+          <label>Ts ≤ (s)<input type="number" id="ds-ts" min="0" step="0.1" placeholder="none"></label>
+          <label>Tp ≤ (s)<input type="number" id="ds-tp" min="0" step="0.01" placeholder="none"></label>
+        </div>
+        <table class="mtable" id="ds-metrics"></table>
+        <div>
+          <div class="eltable" id="ds-els"></div>
+          <div class="dsrow" style="margin-top:8px"><span>Add to plant</span>
+            <button class="btn" type="button" id="ds-add-p">+ pole</button>
+            <button class="btn" type="button" id="ds-add-z">+ zero</button>
+            <button class="btn" type="button" id="ds-add-pp">+ pole pair</button>
+            <button class="btn" type="button" id="ds-add-zz">+ zero pair</button>
+          </div>
+        </div>
+        <ul class="facts-list" id="ds-facts"></ul>
       </div>
     </div>
   </section>
@@ -1034,7 +1116,7 @@ function theme() {
   THEME = {
     sheet: g('--sheet'), grid: g('--grid'), gridMajor: g('--grid-major'), axis: g('--axis'),
     ink: g('--ink'), ink2: g('--ink-2'), ink3: g('--ink-3'), pencil: g('--pencil'), pencilWash: g('--pencil-wash'),
-    rhp: g('--rhp'), ok: g('--ok'), bad: g('--bad'),
+    rhp: g('--rhp'), ok: g('--ok'), okBg: g('--ok-bg'), bad: g('--bad'),
     pens: [1, 2, 3, 4, 5, 6, 7, 8].map(i => g('--pen' + i)),
   };
   return THEME;
@@ -1071,7 +1153,7 @@ class Plot {
     this.ctx = this.canvas.getContext('2d');
     this.view = Object.assign({}, cfg.view);
     this.g = 0; this.hover = null; this.playing = false;
-    if (this.cfg.mode === 'edit' || this.cfg.mode === 'test' || this.cfg.zetaDrag) host.classList.add('drag');
+    if (this.cfg.mode === 'edit' || this.cfg.mode === 'test' || this.cfg.mode === 'design' || this.cfg.zetaDrag) host.classList.add('drag');
     if (this.cfg.controls) this.buildControls();
     this.setSystem(cfg.sys);
     this.setK(cfg.K0 != null ? cfg.K0 : this.defaultK());
@@ -1218,6 +1300,7 @@ class Plot {
     this.drawGrid();
     const O = this.cfg.overlays;
     if (O.excl) this.drawExcluded();
+    if (this.cfg.drawUnder) this.cfg.drawUnder(this);
     if (O.counts) this.drawCounts(true);
     if (O.asym) this.drawAsym();
     if (O.zeta) this.drawZeta();
@@ -1230,10 +1313,11 @@ class Plot {
     if (O.breaks) this.drawBreaks();
     if (O.cross) this.drawCross();
     if (O.zeta) this.drawZetaVectors();
-    this.drawPZ();
+    if (this.cfg.mode !== 'design') this.drawPZ();
     if (this.cfg.mode === 'test') this.drawTest();
     if (this.cfg.showCL !== false) this.drawCL();
     if (this.cfg.badges) this.drawBadges();
+    if (this.cfg.drawOver) this.cfg.drawOver(this);
     this.drawHover();
     if (this.cfg.onDraw) this.cfg.onDraw(this);
   }
@@ -1767,6 +1851,26 @@ class Plot {
     const cv = this.canvas;
     const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
     const mode = this.cfg.mode;
+    if (mode === 'design') {
+      const D = this.cfg.design;
+      cv.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
+      cv.addEventListener('pointerdown', e => {
+        const [px, py] = pos(e);
+        if (e.button === 1) { e.preventDefault(); this.startPan(px, py); cv.setPointerCapture(e.pointerId); return; }
+        if (D.down(px, py, e)) { this.dragging = 'design'; cv.setPointerCapture(e.pointerId); e.preventDefault(); return; }
+        this.downAt = [px, py]; cv.setPointerCapture(e.pointerId);
+      });
+      cv.addEventListener('pointermove', e => {
+        const [px, py] = pos(e);
+        if (this.panning) { this.movePan(px, py); return; }
+        if (this.dragging === 'design') { D.move(px, py, e); return; }
+        if (this.downAt && Math.hypot(px - this.downAt[0], py - this.downAt[1]) > 6) { const d = this.downAt; this.startPan(d[0], d[1]); this.movePan(px, py); return; }
+        if (e.pointerType === 'mouse') cv.style.cursor = D.hover(px, py) ? 'grab' : 'default';
+      });
+      const end = () => { this.downAt = null; if (this.panning) { this.endPan(); return; } if (this.dragging === 'design') { this.dragging = false; D.up(); } };
+      cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+      return;
+    }
     if (this.cfg.pan) cv.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
     cv.addEventListener('pointermove', e => {
       const [px, py] = pos(e);
@@ -2711,6 +2815,621 @@ function updatePanel(pl) {
   ul.innerHTML = L.join('');
 }
 loadPreset('lecture');
+
+/* =====================================================================
+   DESIGN BENCH: hold closed-loop poles, solve for the controller and K
+   ===================================================================== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const item = (kind, re, im, role, pinned, tag) => ({ kind, re, im: Math.abs(im || 0), pair: !!im, role, pinned, tag: tag || '' });
+  const P = (re, im) => item('pole', re, im, 'plant', true);
+  const Z = (re, im) => item('zero', re, im, 'plant', true);
+  const zetaOS = os => { const l = Math.log(os / 100); return -l / Math.sqrt(Math.PI * Math.PI + l * l); };
+  const nice = x => Number(x.toPrecision(2));
+  const sysOf = items => {
+    const poles = [], zeros = [];
+    for (const it of items) {
+      const L = it.kind === 'pole' ? poles : zeros;
+      if (it.pair) { L.push([it.re, it.im]); L.push([it.re, -it.im]); } else L.push([it.re, 0]);
+    }
+    return { poles, zeros };
+  };
+
+  const PROBLEMS = [
+    { name: 'Speed up a type-1 plant (PD)', plant: [P(0), P(-4), P(-6)], specs: { os: 16, ts: 1.107, tp: null }, scheme: 'PD',
+      note: 'Gain alone gives 16% overshoot at K ≈ 43, but it settles in about 3.3 s. The spec asks for three times faster. Switch the controller to P to see the gap, then back to PD.' },
+    { name: 'Same plant with a lead', plant: [P(0), P(-4), P(-6)], specs: { os: 30, ts: 1.986, tp: null }, scheme: 'Lead',
+      note: 'Twice as fast at 30% overshoot. The lead zero is pinned, so the bench solves for the lead pole and K. Drag the zero to explore the trade-off: push it left and the pole has to go much further left, at much higher gain.' },
+    { name: 'Remove steady-state error (PI)', plant: [P(-1), P(-2), P(-10)], specs: { os: 20, ts: 6, tp: null }, scheme: 'PI',
+      note: 'With gain alone the step error is more than a quarter of the step. PI adds an integrator, so the error goes to zero, plus a zero right next to it so the locus hardly moves. The catch is in the step response: a closed-loop pole trapped near that zero makes a long, slow tail. Drag the PI zero to the left and watch the tail speed up while the locus starts to bend.' },
+    { name: 'Faster and zero error (PID)', plant: [Z(-8), P(-3), P(-6), P(-10)], specs: { os: 20, ts: null, tp: 0.198 }, scheme: 'PID',
+      note: 'Peak time two-thirds of the gain-only design, 20% overshoot and zero step error. The free PD zero reshapes the locus; the integrator and its pinned zero near the origin fix the steady state.' },
+  ];
+  const SCHEMES = {
+    P: { name: 'P (gain only)', note: 'Nothing to move but K, so a held pole can only slide along the locus.', make: () => [] },
+    PD: { name: 'PD', note: 'One free zero. It moves until it adds exactly the angle the plant is missing at the held pole.',
+      make: s => [item('zero', -nice(s), 0, 'comp', false, 'PD zero')] },
+    PI: { name: 'PI', note: 'An integrator at the origin plus a pinned zero just left of it. Zero step error; only K is free, so the pole slides along the locus.',
+      make: s => [item('pole', 0, 0, 'comp', true, 'integrator'), item('zero', -nice(0.1 * s), 0, 'comp', true, 'PI zero')] },
+    PID: { name: 'PID', note: 'Integrator and a pinned PI zero near the origin, plus a free PD zero that does the reshaping.',
+      make: s => [item('pole', 0, 0, 'comp', true, 'integrator'), item('zero', -nice(0.1 * s), 0, 'comp', true, 'PI zero'), item('zero', -nice(2 * s), 0, 'comp', false, 'PD zero')] },
+    Lead: { name: 'Lead', note: 'Zero pinned a little left of the held pole, pole free. Drag the zero; the pole and K follow.',
+      make: s => [item('zero', -nice(2.5 * s), 0, 'comp', true, 'lead zero'), item('pole', -nice(10 * s), 0, 'comp', false, 'lead pole')] },
+    Lag: { name: 'Lag', note: 'Zero and pole pinned near the origin at a 10:1 ratio. It raises the low-frequency gain (and the error constant) about 10× while leaving the locus almost where it was.',
+      make: s => [item('zero', -nice(0.1 * s), 0, 'comp', true, 'lag zero'), item('pole', -nice(0.01 * s), 0, 'comp', true, 'lag pole')] },
+    LeadLag: { name: 'Lead–lag', note: 'Lead for speed (free pole), lag for steady-state error (pinned near the origin).',
+      make: s => [item('zero', -nice(2.5 * s), 0, 'comp', true, 'lead zero'), item('pole', -nice(10 * s), 0, 'comp', false, 'lead pole'),
+        item('zero', -nice(0.1 * s), 0, 'comp', true, 'lag zero'), item('pole', -nice(0.01 * s), 0, 'comp', true, 'lag pole')] },
+  };
+
+  const st = { items: [], targets: [], K: 1, specs: { os: 16, ts: 1.107, tp: null }, scheme: 'PD', snap: true, msg: '', syncing: false };
+  let plot = null, ready = false, drag = null;
+
+  const corner = () => {
+    const z = zetaOS(st.specs.os), th = Math.acos(z);
+    let sig = 0;
+    if (st.specs.ts > 0) sig = Math.max(sig, 4 / st.specs.ts);
+    if (st.specs.tp > 0) sig = Math.max(sig, (Math.PI / st.specs.tp) * z / Math.sqrt(1 - z * z));
+    if (!(sig > 0)) sig = 1;
+    return [-sig, sig * Math.tan(th)];
+  };
+  const freeCount = (exclude) => st.items.filter(i => !i.pinned && i !== exclude).reduce((a, i) => a + (i.pair ? 2 : 1), 0);
+
+  function linSolve(A, b) {
+    const n = b.length, M = A.map((r, i) => r.concat([b[i]]));
+    for (let c = 0; c < n; c++) {
+      let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      [M[c], M[p]] = [M[p], M[c]];
+      const d = M[c][c]; if (Math.abs(d) < 1e-300) return null;
+      for (let r = c + 1; r < n; r++) { const f = M[r][c] / d; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+    }
+    const x = new Array(n).fill(0);
+    for (let r = n - 1; r >= 0; r--) { let s = M[r][n]; for (let k = r + 1; k < n; k++) s -= M[r][k] * x[k]; x[r] = s / M[r][r]; }
+    return x;
+  }
+
+  /* Solve D(t) + K N(t) = 0 at every held pole t, moving only free items and K, with the smallest change
+     (Gauss–Newton, minimum-norm step; K is solved as ln K so it stays positive). */
+  function solve(exclude) {
+    const T = st.targets; if (!T.length) return { ok: true };
+    const prm = [];
+    for (const it of st.items) if (!it.pinned && it !== exclude) { prm.push([it, 're']); if (it.pair) prm.push([it, 'im']); }
+    const nEq = T.reduce((a, t) => a + (Math.abs(t[1]) > 1e-9 ? 2 : 1), 0);
+    if (prm.length + 1 < nEq) return { ok: false, short: nEq - prm.length - 1 };
+    const save = prm.map(([it, k]) => it[k]);
+    const S = Math.max(1, Math.hypot(T[0][0], T[0][1]));
+    const apply = u => prm.forEach(([it, k], j) => { it[k] = k === 'im' ? Math.abs(u[j + 1]) : u[j + 1]; });
+    const F = u => {
+      apply(u);
+      const sys = sysOf(st.items), K = Math.exp(u[0]);
+      const D = polyFromRoots(sys.poles), N = polyFromRoots(sys.zeros), r = [];
+      for (const t of T) {
+        const d = polyValC(D, t[0], t[1]), n = polyValC(N, t[0], t[1]);
+        const sc = Math.hypot(d[0], d[1]) + K * Math.hypot(n[0], n[1]) + 1e-300;
+        r.push((d[0] + K * n[0]) / sc);
+        if (Math.abs(t[1]) > 1e-9) r.push((d[1] + K * n[1]) / sc);
+      }
+      return r;
+    };
+    const w = [1, ...prm.map(() => 1 / (S * S))], sw = w.reduce((a, b) => a + b, 0);
+    let u = [Math.log(st.K > 0 && isFinite(st.K) ? st.K : 1), ...save];
+    let f = F(u);
+    const maxAbs = v => v.reduce((a, x) => Math.max(a, Math.abs(x)), 0);
+    for (let iter = 0; iter < 80; iter++) {
+      const err = maxAbs(f);
+      if (err < 1e-12) break;
+      const n = u.length, m = f.length, J = [];
+      for (let i = 0; i < m; i++) J.push(new Array(n).fill(0));
+      for (let j = 0; j < n; j++) {
+        const h = 1e-7 * Math.max(1, Math.abs(u[j])), du = u.slice(); du[j] += h;
+        const fj = F(du); for (let i = 0; i < m; i++) J[i][j] = (fj[i] - f[i]) / h;
+      }
+      const A = [], b = [];
+      let tr = 0;
+      for (let a = 0; a < n; a++) {
+        A.push(new Array(n).fill(0));
+        let s = 0; for (let i = 0; i < m; i++) s += J[i][a] * f[i]; b.push(-s);
+        for (let c = 0; c < n; c++) { let q = 0; for (let i = 0; i < m; i++) q += J[i][a] * J[i][c]; A[a][c] = q; }
+        tr += A[a][a];
+      }
+      const lam = 1e-10 * (tr / n) + 1e-300;
+      for (let a = 0; a < n; a++) A[a][a] += lam * w[a] * n / sw;
+      const step = linSolve(A, b); if (!step) break;
+      let fac = 1;
+      for (let j = 0; j < n; j++) { const cap = j === 0 ? 1.5 : 0.6 * S; if (Math.abs(step[j]) * fac > cap) fac = cap / Math.abs(step[j]); }
+      let improved = false;
+      for (let ls = 0; ls < 12; ls++) {
+        const un = u.map((v, j) => v + fac * step[j]), fn = F(un);
+        if (maxAbs(fn) < err) { u = un; f = fn; improved = true; break; }
+        fac /= 2;
+      }
+      if (!improved) break;
+    }
+    const err = maxAbs(F(u));
+    const ok = err < 1e-9 && prm.every(([it, k]) => Math.abs(it[k]) < 1e4 * S) && isFinite(u[0]);
+    if (!ok) { prm.forEach(([it, k], j) => { it[k] = save[j]; }); return { ok: false }; }
+    st.K = Math.exp(u[0]);
+    return { ok: true };
+  }
+
+  // Put one held pole on the locus of the current design: on the spec's ζ line if possible, else nearest point.
+  function placeOnLocus(t) {
+    const sys = sysOf(st.items), r = Math.hypot(t[0], t[1]);
+    const z = r > 0 ? -t[0] / r : 0.5;
+    let p = Math.abs(t[1]) > 1e-9 && z > 0.01 && z < 0.999 ? zetaPoint(sys, z, 30 * Math.max(1, r)) : null;
+    if (!p) {
+      plot.setSystem(sys);
+      let best = null, bd = Infinity;
+      for (const smp of plot.loc.samples) for (const q of smp.r) { const d = Math.hypot(q[0] - t[0], Math.abs(q[1]) - t[1]); if (d < bd) { bd = d; best = q; } }
+      p = best;
+    }
+    if (!p) return false;
+    st.targets = [[p[0], Math.abs(p[1]) < 1e-9 ? 0 : Math.abs(p[1])]];
+    st.K = gainAt(sys, p[0], p[1]);
+    return isFinite(st.K) && st.K > 0;
+  }
+  function retarget() {
+    const roots = plot.roots.filter(z => z[1] >= -1e-9), used = new Set();
+    st.targets = st.targets.map(t => {
+      let bi = -1, bd = Infinity;
+      roots.forEach((z, i) => { if (used.has(i)) return; const d = Math.hypot(z[0] - t[0], z[1] - t[1]); if (d < bd) { bd = d; bi = i; } });
+      if (bi < 0) return t; used.add(bi);
+      return [roots[bi][0], Math.abs(roots[bi][1]) < 1e-9 ? 0 : roots[bi][1]];
+    });
+  }
+  function resolveAfterEdit(exclude, coarse) {
+    if (!st.targets.length) { refresh(coarse); return; }
+    const r = solve(exclude);
+    if (r.ok) { st.msg = ''; refresh(coarse); return; }
+    if (st.targets.length === 1 && st.targets[0][1] > 1e-9 && placeOnLocus(st.targets[0])) {
+      st.msg = freeCount(exclude) ? 'The free elements can’t hold that pole any more, so K is re-solved to keep its damping ratio instead.' : 'Only K is free, so K is re-solved to keep the held pole’s damping ratio; ωn moves instead.';
+      refresh(coarse); return;
+    }
+    st.msg = 'Nothing free is left to hold the held pole, so K stays put and the closed-loop poles move instead.';
+    refresh(coarse, true);
+  }
+  function refresh(coarse, follow) {
+    plot.setSystem(sysOf(st.items), coarse);
+    st.syncing = true; plot.setK(st.K); st.syncing = false;
+    if (follow) { retarget(); plot.draw(); }
+    render();
+  }
+  function setView() {
+    const c = corner();
+    let S = Math.max(0.5, Math.hypot(c[0], c[1]));
+    for (const t of st.targets) S = Math.max(S, Math.hypot(t[0], t[1]));
+    let x0 = -2.3 * S, x1 = 0.7 * S, y = 1.45 * S;
+    for (const it of st.items) if (Math.hypot(it.re, it.im) < 3.2 * S) { x0 = Math.min(x0, it.re - 0.35 * S); y = Math.max(y, it.im + 0.35 * S); }
+    plot.view = { x0, x1, y0: -y, y1: y };
+  }
+  function aimAtCorner() {
+    st.targets = [corner()];
+    const r = solve(null);
+    if (r.ok) st.msg = '';
+    else if (placeOnLocus(corner())) st.msg = freeCount() ? 'The free elements can’t reach the spec corner, so the held pole sits where the locus crosses the ζ line instead.' : 'Only K is free, so the held pole sits where the locus crosses the overshoot line.';
+    else st.msg = 'The locus never reaches the overshoot line with this controller.';
+  }
+  function applyScheme(name) {
+    st.scheme = name;
+    const c = st.targets.length ? st.targets[0] : corner();
+    st.items = st.items.filter(i => i.role === 'plant').concat(SCHEMES[name].make(Math.max(0.05, -c[0])));
+    $('ds-scheme-note').textContent = SCHEMES[name].note;
+    aimAtCorner();
+    setView();
+    buildTable(); refresh(false);
+  }
+  function loadProblem(i) {
+    const pr = PROBLEMS[i];
+    st.items = pr.plant.map(it => ({ ...it }));
+    st.specs = { ...pr.specs };
+    $('ds-os').value = st.specs.os; $('ds-ts').value = st.specs.ts || ''; $('ds-tp').value = st.specs.tp || '';
+    $('ds-note').textContent = pr.note;
+    $('ds-scheme').value = pr.scheme;
+    st.targets = [];
+    applyScheme(pr.scheme);
+  }
+
+  /* ---------- drawing on the s-plane ---------- */
+  function drawSpecs(p) {
+    const ctx = p.ctx, T = theme(), ox = p.X(0), oy = p.Y(0), R = 3 * Math.max(p.w, p.h);
+    const z = zetaOS(st.specs.os), th = Math.acos(z), c = Math.cos(th), s = Math.sin(th);
+    const sig = st.specs.ts > 0 ? 4 / st.specs.ts : 0, wd = st.specs.tp > 0 ? Math.PI / st.specs.tp : 0;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox - R * c, oy - R * s); ctx.lineTo(ox - 2 * R, oy - R * s); ctx.lineTo(ox - 2 * R, oy + R * s); ctx.lineTo(ox - R * c, oy + R * s); ctx.closePath(); ctx.clip();
+    if (sig) { ctx.beginPath(); ctx.rect(-10, -10, p.X(-sig) + 10, p.h + 20); ctx.clip(); }
+    if (wd) { ctx.beginPath(); ctx.rect(-10, -10, p.w + 20, p.Y(wd) + 10); ctx.rect(-10, p.Y(-wd), p.w + 20, p.h); ctx.clip(); }
+    ctx.globalAlpha = 0.8; ctx.fillStyle = T.okBg; ctx.fillRect(0, 0, p.w, p.h);
+    ctx.restore();
+    ctx.strokeStyle = T.ok; ctx.lineWidth = 1.5; ctx.setLineDash([7, 4]); ctx.beginPath();
+    ctx.moveTo(ox, oy); ctx.lineTo(ox - R * c, oy - R * s); ctx.moveTo(ox, oy); ctx.lineTo(ox - R * c, oy + R * s);
+    if (sig) { const x = p.X(-sig); ctx.moveTo(x, 0); ctx.lineTo(x, p.h); }
+    if (wd) { ctx.moveTo(0, p.Y(wd)); ctx.lineTo(p.w, p.Y(wd)); ctx.moveTo(0, p.Y(-wd)); ctx.lineTo(p.w, p.Y(-wd)); }
+    ctx.stroke(); ctx.setLineDash([]);
+    const font = '600 10.5px "IBM Plex Mono", monospace';
+    let L = Math.min((oy - 30) / Math.max(s, 1e-6), (ox - 20) / Math.max(c, 1e-6)) * 0.92;
+    p.label('ζ ≥ ' + z.toFixed(3) + ' (' + fmt(st.specs.os, 3) + '% OS)', ox - L * c + 8, oy - L * s, { color: T.ok, font });
+    if (sig) p.label('Ts ≤ ' + fmt(st.specs.ts, 3) + ' s', p.X(-sig) - 6, 14, { color: T.ok, font, align: 'right' });
+    if (wd) p.label('Tp ≤ ' + fmt(st.specs.tp, 3) + ' s', 8, p.Y(wd) - 9, { color: T.ok, font });
+  }
+  function drawItems(p) {
+    const ctx = p.ctx, T = theme();
+    st.targets.forEach(t => {
+      for (const y of t[1] ? [t[1], -t[1]] : [0]) {
+        ctx.beginPath(); ctx.arc(p.X(t[0]), p.Y(y), 12, 0, 2 * Math.PI);
+        ctx.strokeStyle = T.pencil; ctx.lineWidth = 2; ctx.setLineDash(y < 0 ? [3, 3] : []); ctx.stroke(); ctx.setLineDash([]);
+      }
+      p.label('held', p.X(t[0]) + 15, p.Y(t[1]) - 12, { color: T.pencil, font: '600 10.5px "IBM Plex Mono", monospace' });
+    });
+    for (const it of st.items) {
+      const col = it.pinned ? T.ink : T.pencil;
+      for (const y of it.pair ? [it.im, -it.im] : [0]) {
+        let x = p.X(it.re), yy = p.Y(y);
+        const off = x < 6 || x > p.w - 6 || yy < 6 || yy > p.h - 6;
+        if (off) {
+          const cx = Math.max(10, Math.min(p.w - 10, x)), cy = Math.max(10, Math.min(p.h - 10, yy)), a = Math.atan2(yy - cy, x - cx);
+          ctx.fillStyle = col; ctx.beginPath();
+          ctx.moveTo(cx + 7 * Math.cos(a), cy + 7 * Math.sin(a)); ctx.lineTo(cx + 6 * Math.cos(a + 2.4), cy + 6 * Math.sin(a + 2.4)); ctx.lineTo(cx + 6 * Math.cos(a - 2.4), cy + 6 * Math.sin(a - 2.4)); ctx.fill();
+          if (y >= 0) p.label((it.kind === 'pole' ? '× ' : '○ ') + fmt(it.re, 3), cx + (cx < p.w / 2 ? 10 : -10), cy - 11, { color: col, align: cx < p.w / 2 ? 'left' : 'right', font: '600 10.5px "IBM Plex Mono", monospace' });
+          continue;
+        }
+        if (!it.pinned) { ctx.beginPath(); ctx.arc(x, yy, 12, 0, 2 * Math.PI); ctx.strokeStyle = T.pencil; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+        if (it.kind === 'zero') {
+          ctx.beginPath(); ctx.arc(x, yy, 6.5, 0, 2 * Math.PI); ctx.fillStyle = T.sheet; ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.stroke();
+        } else {
+          const q = 6; ctx.lineCap = 'round';
+          ctx.strokeStyle = T.sheet; ctx.lineWidth = 5.5; ctx.beginPath(); ctx.moveTo(x - q, yy - q); ctx.lineTo(x + q, yy + q); ctx.moveTo(x + q, yy - q); ctx.lineTo(x - q, yy + q); ctx.stroke();
+          ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(x - q, yy - q); ctx.lineTo(x + q, yy + q); ctx.moveTo(x + q, yy - q); ctx.lineTo(x - q, yy + q); ctx.stroke();
+        }
+        if (it.role === 'comp' && y >= 0) p.label('c', x + 8, yy + 11, { color: col, font: '700 10px "IBM Plex Mono", monospace' });
+      }
+    }
+  }
+
+  /* ---------- pointer ---------- */
+  const hitCL = (px, py) => {
+    let best = null, bd = 14 * 14;
+    for (const z of plot.roots) { const d = (plot.X(z[0]) - px) ** 2 + (plot.Y(z[1]) - py) ** 2; if (d < bd) { bd = d; best = [z[0], Math.abs(z[1]) < 1e-9 ? 0 : Math.abs(z[1])]; } }
+    return best;
+  };
+  const hitItem = (px, py) => {
+    let best = null, bd = 14 * 14;
+    for (const it of st.items) for (const y of it.pair ? [it.im, -it.im] : [0]) { const d = (plot.X(it.re) - px) ** 2 + (plot.Y(y) - py) ** 2; if (d < bd) { bd = d; best = it; } }
+    return best;
+  };
+  const design = {
+    down(px, py) {
+      const it = hitItem(px, py);
+      const cl = hitCL(px, py);
+      const dIt = it ? Math.hypot(plot.X(it.re) - px, plot.Y(Math.sign(plot.wy(py)) * it.im) - py) : Infinity;
+      const dCl = cl ? Math.hypot(plot.X(cl[0]) - px, plot.Y(Math.sign(plot.wy(py) || 1) * cl[1]) - py) : Infinity;
+      if (cl && dCl <= dIt) {
+        let idx = st.targets.findIndex(t => Math.hypot(t[0] - cl[0], t[1] - cl[1]) * plot.sc < 3);
+        drag = { type: 'cl', idx, wasHeld: idx >= 0, moved: false, x0: px, y0: py };
+        if (idx < 0) { st.targets.push(cl); drag.idx = st.targets.length - 1; }
+        return true;
+      }
+      if (it) { drag = { type: 'item', it, moved: false, x0: px, y0: py }; return true; }
+      return false;
+    },
+    move(px, py) {
+      if (!drag) return;
+      if (!drag.moved && Math.hypot(px - drag.x0, py - drag.y0) < 4) return;
+      drag.moved = true;
+      if (drag.type === 'cl') {
+        let x = plot.wx(px), y = Math.abs(plot.wy(py)); if (y * plot.sc < 6) y = 0;
+        const prevT = st.targets.map(t => t.slice()), prevK = st.K;
+        st.targets[drag.idx] = [x, y];
+        const r = solve(null);
+        if (r.ok) { st.msg = ''; refresh(true); return; }
+        if (freeCount() === 0 && st.targets.length === 1) {
+          const h = plot.nearestOnLocus(px, py, Infinity);
+          if (h) { st.targets[0] = [h.z[0], Math.abs(h.z[1]) < 1e-9 ? 0 : Math.abs(h.z[1])]; st.K = h.K; }
+          st.msg = 'Only K is free, so the held pole slides along the locus. Unpin a pole or zero, or pick a controller, to pull it off.';
+        } else {
+          st.targets = prevT; st.K = prevK;
+          st.msg = r.short ? 'Holding ' + st.targets.length + ' closed-loop poles needs ' + r.short + ' more free value' + (r.short > 1 ? 's' : '') + '. Unpin something, or click a held pole to release it.'
+            : 'The free elements can’t put a closed-loop pole there. Try another spot or unpin something.';
+        }
+        refresh(true);
+      } else {
+        const it = drag.it, step = niceStep(20 / plot.sc);
+        const snap = v => st.snap ? Math.round(Math.round(v / step) * step * 1e9) / 1e9 : v;
+        it.re = snap(plot.wx(px));
+        if (it.pair) { let im = Math.abs(plot.wy(py)); it.im = im * plot.sc < 7 ? 0 : snap(im); }
+        resolveAfterEdit(it, true);
+        updateTableValues();
+      }
+    },
+    up() {
+      if (!drag) return;
+      if (drag.type === 'cl' && !drag.moved) {
+        if (drag.wasHeld) { st.targets.splice(drag.idx, 1); st.msg = st.targets.length ? '' : 'Released. Click a closed-loop pole to hold it again.'; }
+        else st.msg = 'Holding this pole. Drag it, or click it again to let go.';
+      }
+      if (drag.type === 'item' && !drag.moved) { drag.it.pinned = !drag.it.pinned; st.msg = drag.it.pinned ? 'Pinned: the bench won’t move it.' : 'Free: the bench will move it to hold the closed-loop poles.'; buildTable(); }
+      drag = null;
+      refresh(false);
+    },
+    hover(px, py) { return !!(hitCL(px, py) || hitItem(px, py)); },
+  };
+
+  /* ---------- step response ---------- */
+  function matMul(A, B) {
+    const n = A.length, m = B[0].length, k = B.length, C = [];
+    for (let i = 0; i < n; i++) { const r = new Array(m).fill(0); for (let l = 0; l < k; l++) { const a = A[i][l]; if (a) for (let j = 0; j < m; j++) r[j] += a * B[l][j]; } C.push(r); }
+    return C;
+  }
+  function expm(M) {
+    const n = M.length;
+    let nrm = 0; for (const r of M) nrm = Math.max(nrm, r.reduce((a, v) => a + Math.abs(v), 0));
+    const s = Math.max(0, Math.ceil(Math.log2(nrm + 1e-300)) + 3), f = Math.pow(2, -s);
+    const A = M.map(r => r.map(v => v * f));
+    const I = () => Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+    let E = I(), T = I();
+    for (let k = 1; k <= 20; k++) { T = matMul(T, A).map(r => r.map(v => v / k)); for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) E[i][j] += T[i][j]; }
+    for (let i = 0; i < s; i++) E = matMul(E, E);
+    return E;
+  }
+  // Exact (zero-order-hold) discretization of the closed loop K·N/(D + K·N) in controllable canonical form.
+  function stepResponse(sys, K, Tend, N) {
+    const D = polyFromRoots(sys.poles), Nn = polyFromRoots(sys.zeros), L = D.length;
+    const Np = padTo(Nn.map(v => v * K), L);
+    let den = D.map((d, i) => d + Np[i]);
+    const a0 = den[0]; den = den.map(v => v / a0);
+    const num = Np.map(v => v / a0), n = den.length - 1, dt = Tend / N, Dd = num[0];
+    const t = new Float64Array(N + 1), y = new Float64Array(N + 1);
+    if (n === 0) { for (let k = 0; k <= N; k++) { t[k] = k * dt; y[k] = Dd; } return { t, y, yf: Dd }; }
+    const M = Array.from({ length: n + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = 0; i < n - 1; i++) M[i][i + 1] = dt;
+    for (let j = 0; j < n; j++) M[n - 1][j] = -den[n - j] * dt;
+    M[n - 1][n] = dt;
+    const E = expm(M), C = [];
+    for (let j = 0; j < n; j++) C.push(num[n - j] - Dd * den[n - j]);
+    let x = new Float64Array(n);
+    for (let k = 0; k <= N; k++) {
+      t[k] = k * dt;
+      let yy = Dd; for (let j = 0; j < n; j++) yy += C[j] * x[j]; y[k] = yy;
+      const xn = new Float64Array(n);
+      for (let i = 0; i < n; i++) { let s = E[i][n]; for (let j = 0; j < n; j++) s += E[i][j] * x[j]; xn[i] = s; }
+      x = xn;
+    }
+    return { t, y, yf: num[n] / den[n] };
+  }
+  function metrics(t, y, yf) {
+    let im = 0; for (let k = 1; k < y.length; k++) if (y[k] > y[im]) im = k;
+    const os = Math.max(0, (y[im] - yf) / Math.abs(yf) * 100);
+    let last = -1; for (let k = 0; k < y.length; k++) if (Math.abs(y[k] - yf) > 0.02 * Math.abs(yf)) last = k;
+    return { os, ts: last < 0 ? 0 : last >= y.length - 1 ? Infinity : t[last + 1], tp: os > 0.05 ? t[im] : null };
+  }
+  let lastResp = null;
+  function drawStep() {
+    const cv = $('ds-step'), T = theme(), { ctx, w, h } = setupCanvas(cv, 230);
+    ctx.fillStyle = T.sheet; ctx.fillRect(0, 0, w, h);
+    const R = lastResp; if (!R) return;
+    const Lm = 40, Rm = 12, top = 12, bot = h - 26, yf = R.yf, ref = Math.abs(yf) > 1e-9 && isFinite(yf) ? Math.abs(yf) : 1;
+    let ymin = 0, ymax = 1.25 * ref;
+    for (const v of R.y) if (isFinite(v)) { ymin = Math.min(ymin, v); ymax = Math.max(ymax, v); }
+    if (R.y2) for (const v of R.y2) { ymax = Math.max(ymax, v); }
+    ymin = Math.max(ymin, -1.5 * ref); ymax = Math.min(ymax * 1.04, 2.6 * ref);
+    const X = tt => Lm + tt / R.Tend * (w - Lm - Rm), Y = v => bot - (v - ymin) / (ymax - ymin) * (bot - top);
+    if (R.stable) { ctx.fillStyle = T.okBg; ctx.fillRect(Lm, Y(yf + 0.02 * ref), w - Lm - Rm, Y(yf - 0.02 * ref) - Y(yf + 0.02 * ref)); }
+    const ts = niceStep(R.Tend / 6);
+    ctx.strokeStyle = T.grid; ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = ts; x <= R.Tend + 1e-9; x += ts) { const px = Math.round(X(x)) + 0.5; ctx.moveTo(px, top); ctx.lineTo(px, bot); }
+    for (const v of [0.5 * ref, ref, 1.5 * ref]) if (v < ymax) { const py = Math.round(Y(v)) + 0.5; ctx.moveTo(Lm, py); ctx.lineTo(w - Rm, py); }
+    ctx.stroke();
+    ctx.strokeStyle = T.axis; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(Lm, Y(0)); ctx.lineTo(w - Rm, Y(0)); ctx.moveTo(Lm, top); ctx.lineTo(Lm, bot); ctx.stroke();
+    ctx.font = '500 10.5px "IBM Plex Mono", monospace'; ctx.fillStyle = T.ink3; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    for (let x = 0; x <= R.Tend + 1e-9; x += ts) if (X(x) < w - Rm - 34) ctx.fillText(fmt(x, 3), X(x), h - 8);
+    ctx.textAlign = 'right'; ctx.fillText('t (s)', w - Rm, h - 8 + 0);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (const v of [0, ref, 0.5 * ref]) if (v <= ymax) ctx.fillText(fmt(v, 3), Lm - 6, Y(v));
+    // spec lines
+    ctx.strokeStyle = T.pencil; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]); ctx.beginPath();
+    if (R.stable && st.specs.os > 0) { const yo = yf * (1 + st.specs.os / 100); ctx.moveTo(Lm, Y(yo)); ctx.lineTo(w - Rm, Y(yo)); }
+    if (st.specs.ts > 0 && st.specs.ts <= R.Tend) { ctx.moveTo(X(st.specs.ts), top); ctx.lineTo(X(st.specs.ts), bot); }
+    if (st.specs.tp > 0 && st.specs.tp <= R.Tend) { ctx.moveTo(X(st.specs.tp), top); ctx.lineTo(X(st.specs.tp), bot); }
+    ctx.stroke(); ctx.setLineDash([]);
+    const lab = (txt, x, y, align) => { ctx.font = '600 10.5px "IBM Plex Mono", monospace'; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.lineWidth = 3.5; ctx.strokeStyle = T.sheet; ctx.strokeText(txt, x, y); ctx.fillStyle = T.pencil; ctx.fillText(txt, x, y); };
+    if (R.stable && st.specs.os > 0) lab('OS limit', w - Rm - 4, Y(yf * (1 + st.specs.os / 100)) - 9, 'right');
+    if (st.specs.ts > 0 && st.specs.ts <= R.Tend) lab('Ts', X(st.specs.ts) + 4, top + 8, 'left');
+    if (st.specs.tp > 0 && st.specs.tp <= R.Tend) lab('Tp', X(st.specs.tp) + 4, top + 22, 'left');
+    ctx.save(); ctx.beginPath(); ctx.rect(Lm, top - 2, w - Lm - Rm, bot - top + 4); ctx.clip();
+    if (R.y2) {
+      ctx.strokeStyle = T.ink2; ctx.lineWidth = 1.6; ctx.setLineDash([6, 4]); ctx.beginPath();
+      R.y2.forEach((v, k) => { const px = X(R.t[k]), py = Y(v); if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.strokeStyle = R.stable ? T.pens[0] : T.bad; ctx.lineWidth = 2.3; ctx.beginPath();
+    R.y.forEach((v, k) => { const px = X(R.t[k]), py = Y(Math.max(ymin - 10, Math.min(ymax + 10, v))); if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
+    ctx.stroke(); ctx.restore();
+  }
+
+  /* ---------- panel ---------- */
+  const fmtS2 = z => fmtPair(z, 3);
+  function render() {
+    if (!ready) return;
+    const sys = plot.sys, K = st.K, roots = plot.roots, stable = maxReal(roots) < -1e-9 * Math.max(1, plot.an.scale);
+    const dom = roots.filter(z => z[1] > 1e-6).sort((a, b) => b[0] - a[0])[0] || null;
+    const specs = st.specs, zmin = zetaOS(specs.os);
+    // response
+    const domTs = dom ? 4 / Math.max(1e-6, -dom[0]) : null;
+    const Tbase = specs.ts > 0 ? specs.ts : specs.tp > 0 ? 3 * specs.tp : domTs && isFinite(domTs) ? domTs : 5;
+    const slow = stable ? Math.min(...roots.map(z => -z[0])) : null;
+    const Tend = stable ? Math.max(1.6 * Tbase, Math.min(6 / slow, 15 * Tbase)) : 1.6 * Tbase;
+    const R = stepResponse(sys, K, Tend, 800);
+    R.Tend = Tend; R.stable = stable;
+    let est = null;
+    if (dom && dom[0] < 0) {
+      const sg = -dom[0], wd = dom[1], wn = Math.hypot(sg, wd), z = sg / wn;
+      est = { z, wn, os: 100 * Math.exp(-z * Math.PI / Math.sqrt(1 - z * z)), ts: 4 / sg, tp: Math.PI / wd };
+      R.y2 = Array.from(R.t, tt => R.yf * (1 - Math.exp(-sg * tt) * (Math.cos(wd * tt) + sg / wd * Math.sin(wd * tt))));
+    }
+    lastResp = R; drawStep();
+    const act = stable && isFinite(R.yf) && Math.abs(R.yf) > 1e-9 ? metrics(R.t, R.y, R.yf) : null;
+    // metrics table
+    const cell = (v, lim, unit, d) => {
+      if (v == null || !isFinite(v)) return '<td>' + (v === Infinity ? '> window' : '—') + '</td>';
+      const pass = !(lim > 0) || v <= lim * 1.0005;
+      return '<td class="' + (lim > 0 ? (pass ? 'pass' : 'fail') : '') + '">' + fmtFixed(v, d) + unit + (lim > 0 ? (pass ? ' ✓' : ' ✗') : '') + '</td>';
+    };
+    const rows = [
+      ['%OS', specs.os, '%', 1, est && est.os, act && act.os],
+      ['Ts (2%)', specs.ts, ' s', 3, est && est.ts, act && act.ts],
+      ['Tp', specs.tp, ' s', 3, est && est.tp, act && act.tp],
+    ];
+    $('ds-metrics').innerHTML = '<tr><th></th><th>spec</th><th>2nd-order est.</th><th>actual</th></tr>' + rows.map(r =>
+      '<tr><td>' + r[0] + '</td><td>' + (r[1] > 0 ? '≤ ' + fmt(r[1], 4) + r[2] : '—') + '</td>' + cell(r[4], r[1], r[2], r[3]) + (stable ? cell(r[5], r[1], r[2], r[3]) : '<td class="fail">unstable ✗</td>') + '</tr>').join('');
+    // facts
+    const L = [];
+    const row = (n, html) => L.push('<li><span>' + n + '</span><span>' + html + '</span></li>');
+    if (st.targets.length) {
+      row('◎', '<b>Held</b><br>' + st.targets.map(t => {
+        const r = Math.hypot(t[0], t[1]), z = r ? -t[0] / r : 1;
+        return fmtS2(t) + (t[1] ? ' <span class="sub">ζ ' + fmtFixed(z, 3) + ', ωn ' + fmtFixed(r, 3) + (z >= zmin - 1e-9 && (!(specs.ts > 0) || -t[0] >= 4 / specs.ts - 1e-9) && (!(specs.tp > 0) || t[1] >= Math.PI / specs.tp - 1e-9) ? ', in the spec region' : ', outside the spec region') + '</span>' : '');
+      }).join('<br>'));
+    } else row('◎', '<b>Nothing held.</b> Click a closed-loop pole (black square) to hold it.');
+    const plantItems = st.items.filter(i => i.role === 'plant'), compItems = st.items.filter(i => i.role === 'comp');
+    const cs = sysOf(compItems);
+    const gc = !compItems.length ? '1' : cs.poles.length ? '<span class="tf">' + tfHTML(cs, { k: false }) + '</span>' : '<span class="tf">' + factorsHTML(cs.zeros) + '</span>';
+    row('K', '<b>K = ' + fmtK(K) + '</b><br><span class="sub">G<sub>c</sub>(s) = </span>' + gc + ' <span class="sub">(' + SCHEMES[st.scheme].name + ')</span>');
+    const t0 = st.targets.find(t => t[1] > 1e-9);
+    if (t0) {
+      const ap = phaseAt(sysOf(plantItems), t0[0], t0[1]), ac = compItems.length ? phaseAt(sysOf(compItems), t0[0], t0[1]) : 0;
+      const need = wrapDeg(180 - ap);
+      row('∠', '<b>Angle at ' + fmtS2(t0) + '</b><br>plant gives ' + fmtAng(wrapDeg(ap)) + '°, so the controller must add <b>' + fmtAng(need) + '°</b>' +
+        '<br><span class="sub">controller adds ' + fmtAng(wrapDeg(ac)) + '° now' + (Math.abs(wrapDeg(ac - need)) < 0.05 ? ' ✓' : '') + (need > 0.05 ? '; positive angle means it needs net lead (zeros closer than poles)' : need < -0.05 ? '; negative means net lag' : '') + '</span>');
+    }
+    // closed-loop poles and what they mean
+    const notes = [];
+    if (dom) {
+      const others = roots.filter(z => Math.hypot(z[0] - dom[0], Math.abs(z[1]) - dom[1]) > 1e-6 * Math.max(1, Math.hypot(...dom)));
+      for (const q of others) {
+        if (q[1] < -1e-9) continue;
+        const nz = sys.zeros.reduce((b, z) => (!b || Math.hypot(z[0] - q[0], z[1] - q[1]) < Math.hypot(b[0] - q[0], b[1] - q[1]) ? z : b), null);
+        const near = nz && Math.hypot(nz[0] - q[0], nz[1] - q[1]) < 0.12 * Math.max(Math.abs(nz[0]), 0.05 * Math.hypot(...dom));
+        if (q[0] > dom[0] + 1e-9) notes.push(near ? 'The pole at ' + fmtS2(q) + ' is slower than the pair but almost cancels the zero at ' + fmtS2(nz) + ': expect a slow tail.' : 'The pole at ' + fmtS2(q) + ' is slower than the pair, so it dominates and the estimate will be wrong.');
+      }
+      const nxt = others.filter(z => z[0] <= dom[0] + 1e-9).sort((a, b) => b[0] - a[0])[0];
+      if (nxt) { const ratio = nxt[0] / dom[0]; notes.push(ratio >= 5 ? 'Next pole is ' + ratio.toFixed(1) + '× farther left: the second-order estimate should hold.' : 'Next pole is only ' + ratio.toFixed(1) + '× farther left (rule of thumb: 5×), so expect the estimate to be off.'); }
+      for (const z of sys.zeros) {
+        if (z[1] < -1e-9 || Math.abs(z[0]) > 5 * Math.abs(dom[0])) continue;
+        const cancelled = roots.some(q => Math.hypot(q[0] - z[0], q[1] - z[1]) < 0.12 * Math.max(Math.abs(z[0]), 0.05 * Math.hypot(...dom)));
+        if (!cancelled) notes.push('The zero at ' + fmtS2(z) + ' is close to the dominant pair; it adds overshoot the estimate doesn’t predict.');
+      }
+    } else notes.push('No complex pair, so the response won’t overshoot from a dominant pair.');
+    {
+      const S = Math.max(1, plot.an.scale);
+      for (const z of sys.zeros) {
+        if (z[1] < -1e-9) continue;
+        if (sys.poles.some(q => Math.hypot(q[0] - z[0], q[1] - z[1]) < 1e-6 * S)) notes.push('The zero at ' + fmtS2(z) + ' lands exactly on a pole and cancels it. That mode is still in the loop: a closed-loop pole stays there for every K' + (z[0] >= -1e-9 ? ', and it is not in the left half-plane.' : '.'));
+      }
+    }
+    row('CL', '<b>Closed-loop poles</b><br>' + roots.filter(z => z[1] >= -1e-9).sort((a, b) => b[0] - a[0]).map(fmtS2).join('<br>') + (stable ? '' : '<br><b class="bad">unstable</b>') +
+      (notes.length ? '<br><span class="sub">' + notes.join('<br>') + '</span>' : ''));
+    // steady state
+    if (stable) {
+      const atO = z => Math.hypot(z[0], z[1]) < 1e-9;
+      const type = Math.max(0, sys.poles.filter(atO).length - sys.zeros.filter(atO).length);
+      const D1 = polyFromRoots(sys.poles.filter(z => !atO(z))), N1 = polyFromRoots(sys.zeros.filter(z => !atO(z)));
+      const Kc = K * polyValC(N1, 0, 0)[0] / polyValC(D1, 0, 0)[0];
+      const txt = type === 0 ? 'type 0: K<sub>p</sub> = ' + fmt(Kc, 4) + ', step error ' + fmtFixed(100 / (1 + Kc), 2) + '%, ramp error ∞'
+        : type === 1 ? 'type 1: K<sub>v</sub> = ' + fmt(Kc, 4) + ', step error 0, ramp error ' + fmt(1 / Kc, 3)
+        : 'type ' + type + ': step and ramp errors 0';
+      row('e∞', '<b>Steady state</b> (unity feedback)<br>' + txt);
+    }
+    $('ds-facts').innerHTML = L.join('');
+    $('ds-msg').textContent = st.msg;
+    updateTableValues();
+  }
+
+  /* ---------- element table ---------- */
+  function buildTable() {
+    const box = $('ds-els'); box.innerHTML = '';
+    st.items.forEach((it, i) => {
+      const row = document.createElement('div'); row.className = 'elrow' + (it.pinned ? '' : ' free');
+      const sym = document.createElement('span'); sym.className = 'sym'; sym.textContent = it.kind === 'pole' ? '×' : '○';
+      const role = document.createElement('span'); role.className = 'role'; role.textContent = it.role === 'plant' ? 'plant' : (it.tag || 'controller');
+      const val = document.createElement('span'); val.className = 'elval';
+      const mkIn = (key, label) => {
+        const inp = document.createElement('input'); inp.type = 'number'; inp.step = '0.1'; inp.id = 'ds-v-' + i + '-' + key;
+        inp.setAttribute('aria-label', (it.role === 'plant' ? 'plant ' : '') + it.kind + ' ' + label); inp.dataset.key = key;
+        inp.addEventListener('change', () => {
+          const v = parseFloat(inp.value); if (!isFinite(v)) return;
+          it[key] = key === 'im' ? Math.abs(v) : v;
+          resolveAfterEdit(it, false);
+        });
+        it['_' + key] = inp; return inp;
+      };
+      val.appendChild(mkIn('re', 'real part'));
+      if (it.pair) { const pm = document.createElement('span'); pm.textContent = '± j'; val.appendChild(pm); val.appendChild(mkIn('im', 'imaginary part')); }
+      const pin = document.createElement('button'); pin.type = 'button'; pin.className = 'pinbtn';
+      pin.setAttribute('aria-pressed', String(it.pinned)); pin.textContent = it.pinned ? 'pinned' : 'free';
+      pin.addEventListener('click', () => { it.pinned = !it.pinned; buildTable(); if (st.targets.length && !it.pinned) { const r = solve(null); if (r.ok) st.msg = ''; } refresh(false); });
+      const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'elx'; rm.textContent = '✕'; rm.setAttribute('aria-label', 'Remove this ' + it.kind);
+      rm.addEventListener('click', () => {
+        const rest = st.items.filter(x => x !== it), cnt = k => rest.filter(x => x.kind === k).reduce((a, x) => a + (x.pair ? 2 : 1), 0);
+        if (!cnt('pole')) { st.msg = 'Keep at least one pole.'; render(); return; }
+        if (cnt('zero') > cnt('pole')) { st.msg = 'That would leave more zeros than poles.'; render(); return; }
+        st.items = rest; buildTable();
+        resolveAfterEdit(null, false);
+      });
+      row.append(sym, role, val, pin, rm);
+      box.appendChild(row);
+    });
+    updateTableValues();
+  }
+  function updateTableValues() {
+    for (const it of st.items) for (const key of ['re', 'im']) {
+      const inp = it['_' + key]; if (!inp || document.activeElement === inp) continue;
+      inp.value = String(Math.round(it[key] * 1000) / 1000);
+    }
+  }
+  function addPlant(kind, pair) {
+    const cnt = k => st.items.filter(x => x.kind === k).reduce((a, x) => a + (x.pair ? 2 : 1), 0);
+    if (kind === 'zero' && cnt('zero') + (pair ? 2 : 1) > cnt('pole')) { st.msg = 'A proper plant needs at least as many poles as zeros. Add a pole first.'; render(); return; }
+    const c = corner();
+    st.items.splice(st.items.filter(i => i.role === 'plant').length, 0, item(kind, Math.round(1.5 * c[0] * 10) / 10, pair ? Math.round(0.8 * c[1] * 10) / 10 : 0, 'plant', true));
+    buildTable();
+    resolveAfterEdit(null, false);
+  }
+
+  /* ---------- wire up ---------- */
+  $('ds-problem').innerHTML = PROBLEMS.map((p, i) => '<option value="' + i + '">' + p.name + '</option>').join('');
+  $('ds-scheme').innerHTML = Object.entries(SCHEMES).map(([k, s]) => '<option value="' + k + '">' + s.name + '</option>').join('');
+  st.items = PROBLEMS[0].plant.map(it => ({ ...it }));
+  plot = new Plot($('plot-ds'), {
+    id: 'ds', sys: sysOf(st.items), view: { x0: -16, x1: 5, y0: -9, y1: 9 }, aspect: 0.72, minH: 300, maxH: 600, mode: 'design', pan: true,
+    overlays: {}, arrows: true, design, drawUnder: drawSpecs, drawOver: drawItems,
+    label: 'Design bench: drag a closed-loop pole to place it; the free controller elements and K follow',
+    onK: p => {
+      if (!ready || st.syncing) return;
+      st.K = p.g; retarget(); p.draw(); st.msg = st.targets.length ? 'Moving K directly: held poles follow the locus.' : ''; render();
+    },
+  });
+  ready = true;
+  $('ds-problem').addEventListener('change', e => loadProblem(+e.target.value));
+  $('ds-scheme').addEventListener('change', e => applyScheme(e.target.value));
+  $('ds-corner').addEventListener('click', () => { aimAtCorner(); refresh(false); });
+  $('ds-snap').addEventListener('change', e => { st.snap = e.target.checked; });
+  $('ds-zin').addEventListener('click', () => { const v = plot.view, cx = (v.x0 + v.x1) / 2, cy = (v.y0 + v.y1) / 2; plot.view = { x0: cx - (cx - v.x0) * 0.75, x1: cx + (v.x1 - cx) * 0.75, y0: cy - (cy - v.y0) * 0.75, y1: cy + (v.y1 - cy) * 0.75 }; refresh(false); });
+  $('ds-zout').addEventListener('click', () => { const v = plot.view, cx = (v.x0 + v.x1) / 2, cy = (v.y0 + v.y1) / 2; plot.view = { x0: cx - (cx - v.x0) / 0.75, x1: cx + (v.x1 - cx) / 0.75, y0: cy - (cy - v.y0) / 0.75, y1: cy + (v.y1 - cy) / 0.75 }; refresh(false); });
+  for (const [id, key] of [['ds-os', 'os'], ['ds-ts', 'ts'], ['ds-tp', 'tp']]) {
+    $(id).addEventListener('change', e => {
+      const v = parseFloat(e.target.value);
+      st.specs[key] = key === 'os' ? Math.min(95, Math.max(0.1, isFinite(v) ? v : 16)) : (isFinite(v) && v > 0 ? v : null);
+      if (key === 'os') e.target.value = st.specs.os;
+      plot.draw(); render();
+    });
+  }
+  $('ds-add-p').addEventListener('click', () => addPlant('pole', false));
+  $('ds-add-z').addEventListener('click', () => addPlant('zero', false));
+  $('ds-add-pp').addEventListener('click', () => addPlant('pole', true));
+  $('ds-add-zz').addEventListener('click', () => addPlant('zero', true));
+  EXTRA_DRAW.push(drawStep);
+  new ResizeObserver(() => drawStep()).observe($('ds-step').parentElement);
+  loadProblem(0);
+})();
 
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawAll);
 </script>
