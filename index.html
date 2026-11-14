@@ -286,6 +286,22 @@ button.play svg { width: 12px; height: 12px; fill: currentColor; }
 .toggles input { accent-color: var(--pencil); }
 .panel { display: grid; gap: 12px; min-width: 0; }
 .panel .tfbox { padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--sheet); overflow-x: auto; }
+.tfview { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.tfshow { flex: 1 1 auto; min-width: 0; overflow-x: auto; background: none; border: 0; margin: -4px -6px; padding: 4px 6px; border-radius: 3px; color: inherit; font: inherit; text-align: left; cursor: text; }
+.tfshow:hover { background: var(--grid); }
+.tfshow:focus-visible { outline: 2px solid var(--pencil); outline-offset: 1px; }
+.tfbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+.tfedit { display: grid; gap: 8px; }
+.tfedit textarea { width: 100%; min-width: 0; min-height: 3.4em; resize: vertical; font: 500 13px/1.45 var(--font-mono); padding: 8px 9px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); }
+.tfedit textarea:focus-visible { outline: 2px solid var(--pencil); outline-offset: 1px; }
+.tfpreview { min-height: 2.6em; overflow-x: auto; display: grid; gap: 4px; }
+.tfpreview .lead { font: 500 12px/1.4 var(--font-mono); color: var(--ink-2); }
+.tfpreview .note { font: 400 12.5px/1.45 var(--font-mono); color: var(--ink-2); }
+.tfpreview.err { font: 500 12.5px/1.45 var(--font-mono); color: var(--bad); }
+.tfex { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font: 500 12px/1.3 var(--font-mono); color: var(--ink-2); }
+.tfexb { font: 500 11.5px/1.2 var(--font-mono); color: var(--ink); background: var(--grid); border: 1px solid transparent; border-radius: 3px; padding: 4px 6px; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.tfexb:hover { border-color: var(--ink-3); }
+.tfexb:focus-visible { outline: 2px solid var(--pencil); outline-offset: 1px; }
 .facts-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; font: 400 13px/1.45 var(--font-mono); font-variant-numeric: tabular-nums; }
 .facts-list li { display: grid; grid-template-columns: 3.2ch minmax(0, 1fr); gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); }
 .facts-list li > span:first-child { color: var(--pencil); font-weight: 600; }
@@ -550,7 +566,7 @@ main.wrap { padding-bottom: 56px; }
   <section id="playground">
     <div class="stack read">
       <h2>Playground</h2>
-      <p>Drag any × or ○. Real poles and zeros slide along the axis; pairs move anywhere, and their mirror follows. Drop a pole near another pole (or a zero near a zero) and it locks on, stacking into a repeated root: double, triple and so on, shown as ×2, ×3 next to the marker. Drag a pair onto the axis to make a double real root. Drop a pole onto a zero to cancel them. With <b>snap to grid</b> on, everything lands on the plot's grid lines; switch it off to place things freely. Set <b>grid</b> to <b>ωn, ζ</b> for circles of constant natural frequency and rays of constant damping ratio; snapping then puts pole pairs exactly on a chosen ωn and ζ. Hold <b>Shift</b> or <b>Ctrl</b> (<b>⌘</b> on a Mac) and click to select several at once, then drag any of them to move the group; <b>Esc</b> clears the selection. Press <b>Delete</b> (or the button) to remove whatever is selected. To pan, drag the empty background or hold the middle mouse button anywhere; ＋ and − zoom. The panel applies every rule to whatever you build.</p>
+      <p>Drag any × or ○. Real poles and zeros slide along the axis; pairs move anywhere, and their mirror follows. Drop a pole near another pole (or a zero near a zero) and it locks on, stacking into a repeated root: double, triple and so on, shown as ×2, ×3 next to the marker. Drag a pair onto the axis to make a double real root. Drop a pole onto a zero to cancel them. With <b>snap to grid</b> on, everything lands on the plot's grid lines; switch it off to place things freely. Set <b>grid</b> to <b>ωn, ζ</b> for circles of constant natural frequency and rays of constant damping ratio; snapping then puts pole pairs exactly on a chosen ωn and ζ. Hold <b>Shift</b> or <b>Ctrl</b> (<b>⌘</b> on a Mac) and click to select several at once, then drag any of them to move the group; <b>Esc</b> clears the selection. Press <b>Delete</b> (or the button) to remove whatever is selected. To pan, drag the empty background or hold the middle mouse button anywhere; ＋ and − zoom. To start from your own problem, click the transfer function in the panel and type or paste it, in LaTeX or plain text; <b>Copy LaTeX</b> gives you the current one back. The panel applies every rule to whatever you build.</p>
     </div>
     <div class="bench">
       <div class="stack">
@@ -584,7 +600,31 @@ main.wrap { padding-bottom: 56px; }
         <p class="hint" id="pg-msg"></p>
       </div>
       <div class="panel">
-        <div class="tfbox"><div class="tf" id="pg-tf"></div></div>
+        <div class="tfbox" id="pg-tfbox">
+          <div class="tfview" id="pg-tf-view">
+            <button type="button" class="tfshow" id="pg-tf-show" aria-label="Edit the transfer function" title="Click to type or paste a transfer function"><span class="tf" id="pg-tf"></span></button>
+            <div class="tfbtns">
+              <button class="btn" type="button" id="pg-tf-edit">Edit</button>
+              <button class="btn" type="button" id="pg-tf-copy">Copy LaTeX</button>
+            </div>
+          </div>
+          <div class="tfedit" id="pg-tf-editor" hidden>
+            <label class="hint" for="pg-tf-input">Type or paste G(s), in LaTeX or plain text. Enter applies, Esc cancels.</label>
+            <textarea id="pg-tf-input" rows="2" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+            <div class="tfpreview" id="pg-tf-preview" aria-live="polite"></div>
+            <div class="tfbtns">
+              <button class="btn" type="button" id="pg-tf-apply">Apply</button>
+              <button class="btn" type="button" id="pg-tf-cancel">Cancel</button>
+            </div>
+            <div class="tfex"><span>Try</span>
+              <button type="button" class="tfexb">\frac{K(s+2)(s+1)}{(s-2)(s-1)}</button>
+              <button type="button" class="tfexb">G(s)=\frac{10(s+8)}{(s+3)(s+6)(s+10)}</button>
+              <button type="button" class="tfexb">1+\frac{K}{s(s^2+4s+8)}=0</button>
+              <button type="button" class="tfexb">s^3+6s^2+8s+K=0</button>
+              <button type="button" class="tfexb">K(s+1)/s^2(s+9)</button>
+            </div>
+          </div>
+        </div>
         <ul class="facts-list" id="pg-facts"></ul>
       </div>
     </div>
@@ -2638,6 +2678,335 @@ function buildCard(gridId, key) {
 ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11'].forEach(k => buildCard('cards-edges', k));
 
 /* =====================================================================
+   TRANSFER FUNCTION INPUT: LaTeX or plain text -> poles, zeros, gain
+   ===================================================================== */
+const TFP = (function () {
+  const fail = msg => { const e = new Error(msg); e.tf = true; throw e; };
+
+  /* ---------- LaTeX -> plain expression ---------- */
+  function readGroup(s, i) {
+    while (i < s.length && /\s/.test(s[i])) i++;
+    if (i >= s.length) fail('\\frac is missing an argument.');
+    if (s[i] === '{') {
+      let d = 0;
+      for (let j = i; j < s.length; j++) {
+        if (s[j] === '{') d++;
+        else if (s[j] === '}' && --d === 0) return [s.slice(i + 1, j), j + 1];
+      }
+      fail('A { has no matching }.');
+    }
+    if (s[i] === '\\') { const m = s.slice(i).match(/^\\[A-Za-z]+/); if (m) return [m[0], i + m[0].length]; }
+    return [s[i], i + 1];
+  }
+  function expandFrac(s) {
+    let out = '', i = 0;
+    for (;;) {
+      const k = s.indexOf('\\frac', i);
+      if (k < 0) return out + s.slice(i);
+      out += s.slice(i, k);
+      const [a, j1] = readGroup(s, k + 5), [b, j2] = readGroup(s, j1);
+      out += '((' + expandFrac(a) + ')/(' + expandFrac(b) + '))';
+      i = j2;
+    }
+  }
+  const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-' };
+  function toPlain(src) {
+    let s = String(src);
+    // text copied from a rendered fraction arrives as two lines: numerator, then denominator
+    const lines = s.split(/\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length === 2 && !/\\frac|\/|=/.test(s)) s = '(' + lines[0] + ')/(' + lines[1] + ')';
+    s = s.replace(/[−–—]/g, '-').replace(/[·⋅×∙]/g, '*').replace(/÷/g, '/');
+    s = s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, m => '^(' + [...m].map(c => SUP[c]).join('') + ')');
+    s = s.replace(/\$/g, ' ').replace(/\\[\[\]()]/g, ' ');
+    s = s.replace(/\\(begin|end)\{[^}]*\}/g, ' ').replace(/&/g, ' ').replace(/\\\\/g, ' ');
+    s = s.replace(/\\(displaystyle|textstyle|scriptstyle|left|right|middle|[bB]igg?[lr]?)(?![A-Za-z])/g, ' ');
+    s = s.replace(/\\[,;:! ]/g, ' ').replace(/~/g, ' ').replace(/\\q?quad(?![A-Za-z])/g, ' ');
+    s = s.replace(/\\[dtc]frac(?![A-Za-z])/g, '\\frac');
+    s = s.replace(/\\(cdot|times|ast)(?![A-Za-z])/g, '*').replace(/\\div(?![A-Za-z])/g, '/');
+    s = s.replace(/\\(mathrm|mathit|mathbf|mathsf|text|textrm|textit|operatorname)\s*\{([^{}]*)\}/g, ' $2 ');
+    s = s.replace(/_\s*\{[^{}]*\}/g, '').replace(/_\s*\\?[A-Za-z0-9]/g, '');
+    s = s.replace(/\\\{/g, '(').replace(/\\\}/g, ')');
+    s = expandFrac(s);
+    const bad = s.match(/\\[A-Za-z]+/);
+    if (bad) fail('The LaTeX command ' + bad[0] + ' isn’t supported here.');
+    return s.replace(/[{\[]/g, '(').replace(/[}\]]/g, ')');
+  }
+
+  /* ---------- tokenizer + parser ---------- */
+  function tokenize(s) {
+    const t = [];
+    for (let i = 0; i < s.length;) {
+      const c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      const num = s.slice(i).match(/^(\d+\.?\d*|\.\d+)/);
+      if (num) { t.push({ k: 'n', v: parseFloat(num[0]) }); i += num[0].length; continue; }
+      if (c === '*' && s[i + 1] === '*') { t.push({ k: '^' }); i += 2; continue; }
+      if ('+-*/^()'.includes(c)) { t.push({ k: c }); i++; continue; }
+      if (c === 's') { t.push({ k: 's' }); i++; continue; }
+      if (c === 'K' || c === 'k') { t.push({ k: 'K' }); i++; continue; }
+      if (c === 'j' || c === 'i') fail('Complex numbers can’t be typed directly. Write a conjugate pair as a quadratic, like (s^2+2s+5).');
+      if (/[A-Za-z]/.test(c)) fail('“' + c + '” isn’t a symbol the playground knows. Only s and K can appear, so put numbers in for any other parameters.');
+      fail('Can’t read “' + c + '”.');
+    }
+    return t;
+  }
+  function parse(tokens) {
+    let i = 0, hasK = false;
+    const peek = () => tokens[i], eat = k => { if (tokens[i] && tokens[i].k === k) { i++; return true; } return false; };
+    const startsAtom = tk => tk && (tk.k === 'n' || tk.k === 's' || tk.k === 'K' || tk.k === '(');
+    function constValue(node) {
+      if (node.t === 'n') return node.v;
+      if (node.t === 'neg') return -constValue(node.a);
+      if (node.t === 'add') return constValue(node.a) + node.sg * constValue(node.b);
+      if (node.t === 'mul') return constValue(node.a) * constValue(node.b);
+      if (node.t === 'div') return constValue(node.a) / constValue(node.b);
+      if (node.t === 'pow') return Math.pow(constValue(node.a), node.n);
+      fail('An exponent has to be a plain number.');
+    }
+    function expr() {
+      let node;
+      if (eat('-')) node = { t: 'neg', a: term() }; else { eat('+'); node = term(); }
+      for (;;) {
+        if (eat('+')) node = { t: 'add', a: node, b: term(), sg: 1 };
+        else if (eat('-')) node = { t: 'add', a: node, b: term(), sg: -1 };
+        else return node;
+      }
+    }
+    function term() {
+      let node = implicit();
+      for (;;) {
+        if (eat('*')) node = { t: 'mul', a: node, b: implicit() };
+        else if (eat('/')) node = { t: 'div', a: node, b: implicit() };
+        else return node;
+      }
+    }
+    function implicit() {
+      let node = power();
+      while (startsAtom(peek())) node = { t: 'mul', a: node, b: power() };
+      return node;
+    }
+    function power() {
+      const a = atom();
+      if (!eat('^')) return a;
+      let sg = 1; if (eat('-')) sg = -1; else eat('+');
+      const e = sg * constValue(atom());
+      if (!Number.isInteger(e)) fail('Exponents have to be whole numbers.');
+      if (Math.abs(e) > 12) fail('That exponent is too big for one plot.');
+      return { t: 'pow', a, n: e };
+    }
+    function atom() {
+      const tk = peek();
+      if (!tk) fail('The expression ends too early.');
+      if (tk.k === 'n') { i++; return { t: 'n', v: tk.v }; }
+      if (tk.k === 's') { i++; return { t: 's' }; }
+      if (tk.k === 'K') { i++; hasK = true; return { t: 'K' }; }
+      if (eat('(')) { const node = expr(); if (!eat(')')) fail('A ( has no matching ).'); return node; }
+      fail(tk.k === ')' ? 'There’s an extra ).' : 'Something is missing before “' + tk.k + '”.');
+    }
+    if (!tokens.length) fail('Type a transfer function.');
+    const root = expr();
+    if (i < tokens.length) fail(tokens[i].k === ')' ? 'There’s an extra ).' : 'Can’t read the part starting at “' + tokens[i].k + '”.');
+    return { root, hasK };
+  }
+
+  /* ---------- rational functions kept as a gain times monic factors ---------- */
+  const trimP = p => { let m = 0; for (const c of p) m = Math.max(m, Math.abs(c)); let j = 0; while (j < p.length - 1 && Math.abs(p[j]) <= 1e-12 * m) j++; return p.slice(j); };
+  const addP = (a, b) => { const L = Math.max(a.length, b.length), A = padTo(a, L), B = padTo(b, L); return A.map((v, i) => v + B[i]); };
+  const prodP = list => list.reduce((acc, p) => polyMul(acc, p), [1]);
+  const sameP = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= 1e-9 * Math.max(1, Math.abs(v), Math.abs(b[i])));
+  function fromPoly(p) {
+    p = trimP(p);
+    if (p.every(c => c === 0) || (p.length === 1 && Math.abs(p[0]) < 1e-300)) return { k: 0, nf: [], df: [] };
+    if (p.length === 1) return { k: p[0], nf: [], df: [] };
+    return { k: p[0], nf: [p.map(c => c / p[0])], df: [] };
+  }
+  const R = {
+    num: v => ({ k: v, nf: [], df: [] }),
+    s: () => ({ k: 1, nf: [[1, 0]], df: [] }),
+    mul: (a, b) => ({ k: a.k * b.k, nf: a.nf.concat(b.nf), df: a.df.concat(b.df) }),
+    div(a, b) { if (b.k === 0) fail('Something in the expression divides by zero.'); return { k: a.k / b.k, nf: a.nf.concat(b.df), df: a.df.concat(b.nf) }; },
+    neg: a => ({ k: -a.k, nf: a.nf, df: a.df }),
+    pow(a, n) { let r = R.num(1); for (let j = 0; j < Math.abs(n); j++) r = R.mul(r, a); return n < 0 ? R.div(R.num(1), r) : r; },
+    add(a, b, sg) {
+      if (b.k === 0) return a;
+      if (a.k === 0) return sg > 0 ? b : R.neg(b);
+      const used = a.df.map(() => false), bExtra = [];
+      for (const f of b.df) { const j = a.df.findIndex((g, q) => !used[q] && sameP(f, g)); if (j >= 0) used[j] = true; else bExtra.push(f); }
+      const aExtra = a.df.filter((g, q) => !used[q]);
+      const P = addP(prodP(a.nf.concat(bExtra)).map(c => c * a.k), prodP(b.nf.concat(aExtra)).map(c => c * b.k * sg));
+      const r = fromPoly(P);
+      return r.k === 0 ? r : { k: r.k, nf: r.nf, df: a.df.concat(bExtra) };
+    },
+  };
+  function evaluate(node, Kv) {
+    switch (node.t) {
+      case 'n': return R.num(node.v);
+      case 's': return R.s();
+      case 'K': return R.num(Kv);
+      case 'neg': return R.neg(evaluate(node.a, Kv));
+      case 'add': return R.add(evaluate(node.a, Kv), evaluate(node.b, Kv), node.sg);
+      case 'mul': return R.mul(evaluate(node.a, Kv), evaluate(node.b, Kv));
+      case 'div': return R.div(evaluate(node.a, Kv), evaluate(node.b, Kv));
+      case 'pow': return R.pow(evaluate(node.a, Kv), node.n);
+    }
+  }
+  const TEST_S = [[0.37, 0.91], [-1.7, 0.43], [2.3, -1.1]];
+  function valueAt(r, x, y) {
+    let v = [r.k, 0];
+    const mulC = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+    for (const f of r.nf) v = mulC(v, polyValC(f, x, y));
+    for (const f of r.df) v = cdiv(v, polyValC(f, x, y));
+    return v;
+  }
+  const close = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) <= 1e-7 * Math.max(1, Math.hypot(a[0], a[1]), Math.hypot(b[0], b[1]));
+
+  /* ---------- roots, tidied so repeated and conjugate roots come out exact ---------- */
+  function snapNice(x) { const r = Math.round(x * 1e4) / 1e4; return Math.abs(x - r) < 1e-6 * Math.max(1, Math.abs(x)) ? r : x; }
+  function factorRoots(p) {
+    if (p.length === 2) return { exact: [[-p[1], 0]], approx: [] };
+    if (p.length === 3) {
+      const b = p[1], c = p[2], d = b * b - 4 * c;
+      if (Math.abs(d) <= 1e-12 * (b * b + Math.abs(c))) return { exact: [[-b / 2, 0], [-b / 2, 0]], approx: [] };
+      if (d < 0) { const w = Math.sqrt(-d) / 2; return { exact: [[-b / 2, w], [-b / 2, -w]], approx: [] }; }
+      const q = -(b + Math.sign(b || 1) * Math.sqrt(d)) / 2, r1 = q, r2 = q !== 0 ? c / q : -b - q;
+      return { exact: [[r1, 0], [r2, 0]], approx: [] };
+    }
+    return { exact: [], approx: polyRoots(p) };
+  }
+  // An m-fold root of p is a simple root of p^(m-1), where Newton's method converges cleanly.
+  // The result only counts if p and its first m-1 derivatives all vanish there.
+  function polish(p, m, c) {
+    const ders = [p]; for (let d = 1; d <= m; d++) ders.push(polyDer(ders[d - 1]));
+    const q = ders[m - 1], dq = ders[m];
+    let z = [c[0], c[1]];
+    for (let it = 0; it < 50; it++) {
+      const f = polyValC(q, z[0], z[1]), g = polyValC(dq, z[0], z[1]);
+      if (Math.hypot(g[0], g[1]) < 1e-300) break;
+      const st = cdiv(f, g);
+      z = [z[0] - st[0], c[1] === 0 ? 0 : z[1] - st[1]];
+      if (Math.hypot(st[0], st[1]) < 1e-15 * Math.max(1, Math.hypot(z[0], z[1]))) break;
+    }
+    const r = Math.max(1, Math.hypot(z[0], z[1]));
+    for (let d = 0; d < m; d++) {
+      const v = polyValC(ders[d], z[0], z[1]), P = ders[d];
+      let scale = 0; P.forEach((cf, i) => { scale += Math.abs(cf) * Math.pow(r, P.length - 1 - i); });
+      if (Math.hypot(v[0], v[1]) > 1e-9 * scale) return null;
+    }
+    return z;
+  }
+  function tidy(approx, p) {
+    let S = 1; for (const z of approx) S = Math.max(S, Math.hypot(z[0], z[1]));
+    const rs = approx.map(z => [z[0], Math.abs(z[1]) < 1e-7 * S ? 0 : z[1]]);
+    const used = rs.map(() => false), out = [];
+    for (let a = 0; a < rs.length; a++) {
+      if (used[a]) continue;
+      const grp = [a]; used[a] = true;
+      for (let g = 0; g < grp.length; g++) for (let b = 0; b < rs.length; b++) {
+        if (used[b]) continue;
+        const z = rs[grp[g]];
+        if (Math.hypot(rs[b][0] - z[0], rs[b][1] - z[1]) < 2e-2 * Math.max(1, Math.hypot(z[0], z[1]))) { used[b] = true; grp.push(b); }
+      }
+      if (grp.length === 1) { out.push(rs[a]); continue; }
+      let x = 0, y = 0; for (const q of grp) { x += rs[q][0]; y += rs[q][1]; }
+      x /= grp.length; y /= grp.length;
+      if (Math.abs(y) < 2e-2 * Math.max(1, Math.abs(x))) y = 0;
+      const z = polish(p, grp.length, [x, y]);
+      if (z) for (const q of grp) out.push([z[0], z[1]]);
+      else for (const q of grp) out.push(rs[q]);
+    }
+    return out;
+  }
+  function finishRoots(list) {
+    const rs = list.map(z => [snapNice(z[0]), snapNice(z[1])]);
+    // make complex roots exact conjugates
+    const up = rs.filter(z => z[1] > 0), dn = rs.filter(z => z[1] < 0), real = rs.filter(z => z[1] === 0), out = real.slice();
+    const taken = dn.map(() => false);
+    for (const z of up) {
+      let j = -1, bd = Infinity;
+      dn.forEach((q, k) => { if (!taken[k]) { const d = Math.hypot(q[0] - z[0], q[1] + z[1]); if (d < bd) { bd = d; j = k; } } });
+      if (j < 0) { out.push([z[0], 0]); continue; }
+      taken[j] = true;
+      const re = snapNice((z[0] + dn[j][0]) / 2), im = snapNice((z[1] - dn[j][1]) / 2);
+      out.push([re, im], [re, -im]);
+    }
+    dn.forEach((q, k) => { if (!taken[k]) out.push([q[0], 0]); });
+    return out;
+  }
+  function rootsOf(factors) {
+    const exact = [], approx = [];
+    for (const f of factors) { const r = factorRoots(f); exact.push(...r.exact); approx.push(...tidy(r.approx, f)); }
+    return finishRoots(exact.concat(approx));
+  }
+
+  /* ---------- picking the transfer function out of an equation ---------- */
+  const isName = p => /^([A-Za-z]+\(s\))+$/.test(p.replace(/[\s*]/g, ''));
+  const isZero = p => /^0*\.?0*$/.test(p.replace(/\s/g, '')) && /0/.test(p);
+  function readOne(plain, eq0) {
+    const { root, hasK } = parse(tokenize(plain));
+    let G, form;
+    if (eq0) {
+      if (!hasK) fail('A characteristic equation needs a K in it, like 1 + K·G(s) = 0 or s³ + 6s² + 8s + K = 0.');
+      const F0 = evaluate(root, 0), F1 = evaluate(root, 1), F2 = evaluate(root, 2);
+      if (F0.k === 0) fail('With K = 0 this equation is 0 = 0, so it can’t be a characteristic equation.');
+      for (const t of TEST_S) {
+        const a = valueAt(F0, ...t), b = valueAt(F1, ...t), c = valueAt(F2, ...t);
+        if (!close(c, [2 * b[0] - a[0], 2 * b[1] - a[1]])) fail('K has to appear to the first power, as in D(s) + K·N(s) = 0.');
+      }
+      G = R.add(R.div(F1, F0), R.num(1), -1);
+      form = 'char';
+    } else {
+      G = evaluate(root, 1);
+      if (hasK) {
+        const G2 = evaluate(root, 2);
+        for (const t of TEST_S) { const a = valueAt(G, ...t), b = valueAt(G2, ...t); if (!close(b, [2 * a[0], 2 * a[1]])) fail('K has to multiply the whole transfer function, as in K·N(s)/D(s).'); }
+      }
+      form = 'tf';
+    }
+    if (G.k === 0) fail('That works out to G(s) = 0, which has no locus.');
+    const poles = rootsOf(G.df), zeros = rootsOf(G.nf);
+    if (!poles.length) fail('There are no poles, so nothing moves. The playground needs a D(s) with at least one root.');
+    if (zeros.length > poles.length) fail('That has more zeros (' + zeros.length + ') than poles (' + poles.length + '). The playground needs a proper G(s).');
+    if (poles.length + zeros.length > 16) fail('That’s more poles and zeros than one plot can show clearly (16 at most).');
+    return { sys: { poles, zeros }, gain: Math.abs(G.k), negative: G.k < 0, hasK, form };
+  }
+  function read(src) {
+    const plain = toPlain(src);
+    const parts = plain.split('=').map(p => p.trim());
+    const eq0 = parts.length > 1 && parts.some(isZero);
+    const cand = parts.filter(p => p && !isName(p) && !isZero(p));
+    if (!cand.length) fail(parts.length > 1 ? 'Couldn’t find the transfer function itself, only its name.' : 'Type a transfer function.');
+    let err = null;
+    for (let c = cand.length - 1; c >= 0; c--) {
+      try { return readOne(cand[c], eq0 && cand.length === 1); } catch (e) { if (!e.tf) throw e; if (!err) err = e; }
+    }
+    throw err;
+  }
+
+  /* ---------- poles and zeros -> LaTeX ---------- */
+  const tnum = x => { const r = Number(Math.abs(x).toFixed(4)); return String(r); };
+  function texFactors(roots) {
+    const groups = groupRoots(roots, 1e-9).filter(g => g.z[1] >= -1e-9);
+    const atOrigin = g => Math.abs(g.z[0]) < 1e-12 && Math.abs(g.z[1]) < 1e-9;
+    groups.sort((a, b) => atOrigin(b) - atOrigin(a) || (Math.abs(a.z[1]) > 1e-9) - (Math.abs(b.z[1]) > 1e-9) || b.z[0] - a.z[0]);
+    let out = '';
+    for (const g of groups) {
+      const [re, im] = g.z, sup = g.m > 1 ? '^{' + g.m + '}' : '';
+      if (Math.abs(im) < 1e-9) out += Math.abs(re) < 1e-12 ? 's' + sup : '(s' + (re < 0 ? '+' : '-') + tnum(re) + ')' + sup;
+      else {
+        const b = -2 * re, c = re * re + im * im;
+        const bt = Math.abs(b) < 1e-9 ? '' : (b < 0 ? '-' : '+') + (Math.abs(Math.abs(b) - 1) < 1e-9 ? '' : tnum(b)) + 's';
+        out += '(s^2' + bt + '+' + tnum(c) + ')' + sup;
+      }
+    }
+    return out;
+  }
+  function toTeX(sys, negative) {
+    return (negative ? '-' : '') + '\\frac{K' + texFactors(sys.zeros) + '}{' + (texFactors(sys.poles) || '1') + '}';
+  }
+  return { read, toTeX, toPlain };
+})();
+
+/* =====================================================================
    PLAYGROUND
    ===================================================================== */
 const PRESETS = [
@@ -2725,6 +3094,74 @@ function loadPreset(key) {
   pgMsg.textContent = '';
 }
 sel.addEventListener('change', () => loadPreset(sel.value));
+sel.insertAdjacentHTML('afterbegin', '<option value="custom" hidden>Typed in</option>');
+
+/* ---------- typing or pasting a transfer function ---------- */
+const tfEls = {
+  view: document.getElementById('pg-tf-view'), editor: document.getElementById('pg-tf-editor'), input: document.getElementById('pg-tf-input'),
+  preview: document.getElementById('pg-tf-preview'), apply: document.getElementById('pg-tf-apply'), copy: document.getElementById('pg-tf-copy'),
+};
+let tfParsed = null;
+function tfNotes(r) {
+  const out = [];
+  if (r.form === 'char') out.push('Read as a characteristic equation, 1 + K·G(s) = 0.');
+  if (!r.hasK && r.form === 'tf') out.push(r.gain !== 1 ? 'No K, so the plot sweeps a gain in front of it. K = ' + fmt(r.gain, 4) + ' on the plot is your system as typed.' : 'No K, so the plot sweeps a gain in front of it. K = 1 on the plot is your system as typed.');
+  else if (r.gain !== 1) out.push('The constant ' + fmt(r.gain, 4) + ' is folded into K: K on the plot = ' + fmt(r.gain, 4) + ' × your K.');
+  if (r.negative) out.push('The overall sign is negative, so this is the 0° locus (K < 0 switched on).');
+  return out;
+}
+function tfPreview() {
+  const txt = tfEls.input.value;
+  try {
+    tfParsed = TFP.read(txt);
+    tfEls.preview.className = 'tfpreview';
+    tfEls.preview.innerHTML = '<span class="lead">Reads as G(s) =</span><span class="tf">' + (tfParsed.negative ? '− ' : '') + tfHTML(tfParsed.sys) + '</span>' +
+      tfNotes(tfParsed).map(n => '<span class="note">' + n + '</span>').join('');
+    tfEls.apply.disabled = false;
+  } catch (e) {
+    tfParsed = null;
+    tfEls.apply.disabled = true;
+    tfEls.preview.className = 'tfpreview err';
+    tfEls.preview.textContent = txt.trim() ? (e.tf ? e.message : 'Couldn’t read that.') : 'Type a transfer function.';
+  }
+}
+function tfOpen() {
+  tfEls.input.value = TFP.toTeX(pgPlot.sys, pgPlot.negative);
+  tfEls.view.hidden = true; tfEls.editor.hidden = false;
+  tfPreview();
+  tfEls.input.focus(); tfEls.input.select();
+}
+function tfClose() { tfEls.editor.hidden = true; tfEls.view.hidden = false; }
+function tfApply() {
+  if (!tfParsed) return;
+  const r = tfParsed, sys = r.sys, neg = r.negative;
+  sel.value = 'custom';
+  pgItems = itemsFromSys(sys); pgPlot.items = pgItems; pgPlot.selected = null; pgPlot.selection = []; pgPlot.cfg.onSelect([]);
+  document.getElementById('tg-neg').checked = neg; pgPlot.cfg.negative = neg;
+  pgPlot.host.querySelector('.ctrl label').textContent = neg ? '|K|' : 'K';
+  pgPlot.view = fitView(sys);
+  pgPlot.setSystem(sys);
+  pgPlot.setK(pgPlot.defaultK());
+  document.getElementById('pg-tf').innerHTML = tfHTML(sys);
+  pgMsg.textContent = tfNotes(r).join(' ');
+  tfClose();
+  document.getElementById('pg-tf-show').focus();
+}
+document.getElementById('pg-tf-show').addEventListener('click', tfOpen);
+document.getElementById('pg-tf-edit').addEventListener('click', tfOpen);
+document.getElementById('pg-tf-cancel').addEventListener('click', () => { tfClose(); document.getElementById('pg-tf-show').focus(); });
+tfEls.apply.addEventListener('click', tfApply);
+tfEls.input.addEventListener('input', tfPreview);
+tfEls.input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); tfApply(); }
+  else if (e.key === 'Escape') { e.preventDefault(); tfClose(); document.getElementById('pg-tf-show').focus(); }
+});
+document.querySelectorAll('#pg-tf-editor .tfexb').forEach(b => b.addEventListener('click', () => { tfEls.input.value = b.textContent; tfPreview(); tfEls.input.focus(); }));
+tfEls.copy.addEventListener('click', () => {
+  const tex = TFP.toTeX(pgPlot.sys, pgPlot.negative), done = () => { tfEls.copy.textContent = 'Copied'; setTimeout(() => { tfEls.copy.textContent = 'Copy LaTeX'; }, 1400); };
+  const fallback = () => { tfOpen(); pgMsg.textContent = 'Select the text in the box and copy it.'; };
+  try { navigator.clipboard.writeText(tex).then(done, fallback); } catch (e) { fallback(); }
+});
 function addItem(kind, pair) {
   const np = pgItems.filter(i => i.kind === 'pole').reduce((s, i) => s + (i.pair ? 2 : 1), 0);
   const nz = pgItems.filter(i => i.kind === 'zero').reduce((s, i) => s + (i.pair ? 2 : 1), 0);
