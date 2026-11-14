@@ -145,7 +145,13 @@ code, .mono { font-family: var(--font-mono); font-size: 0.9em; }
 .plot.drag canvas { touch-action: none; }
 .ctrl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 500 13px/1 var(--font-mono); color: var(--ink-2); }
 .ctrl input[type="range"] { flex: 1 1 140px; min-width: 0; accent-color: var(--pencil); }
-.ctrl .kval { flex: none; width: 12.5ch; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ctrl .kval { flex: none; width: 13.5ch; display: inline-flex; align-items: baseline; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ctrl .kpre { flex: none; white-space: pre; }
+.ctrl .kin { flex: 1 1 auto; width: 100%; min-width: 0; margin: 0; padding: 2px 1px; font: inherit; color: inherit; font-variant-numeric: tabular-nums; background: transparent; border: 0; border-bottom: 1px dashed var(--ink-3); border-radius: 0; cursor: text; }
+.ctrl .kin:hover { border-bottom-color: var(--ink); }
+.ctrl .kin:focus { outline: none; background: var(--sheet); border-bottom: 1px solid var(--pencil); }
+.ctrl .kin:focus-visible { outline: 2px solid var(--pencil); outline-offset: 1px; }
+.ctrl .kin.bad { color: var(--bad); border-bottom-color: var(--bad); }
 .ctrl > label { flex: none; width: 3ch; text-align: right; }
 .ctrl > .btn { flex: none; }
 .ctrl > .chip { flex: none; width: 11ch; text-align: center; white-space: nowrap; }
@@ -1002,6 +1008,15 @@ function fmtAng(a) {
   if (s === '-0') s = '0';
   return s.replace('-', '−');
 }
+// Reads a typed gain: 25, 0.5, 1e3, 2.5×10^3, "K = 40". In K < 0 mode a leading minus is optional.
+function parseGain(text, negative) {
+  let s = String(text).trim().replace(/^\|?K\|?\s*=\s*/i, '').replace(/[\u2212\u2013]/g, '-').replace(/[\s,]/g, '');
+  s = s.replace(/^([-+]?[\d.]+)(?:[×x*·]10\^?\(?([-+]?\d+)\)?)$/i, '$1e$2');
+  if (!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(s)) return null;
+  let v = Number(s);
+  if (negative) v = Math.abs(v);
+  return isFinite(v) && v >= 0 && v <= 1e12 ? v : null;
+}
 function fmtFixed(x, d = 2) { if (Math.abs(x) < 0.5 * Math.pow(10, -d)) x = 0; return x.toFixed(d).replace('-', '−'); }
 function fmtK(K) {
   if (K === 0) return '0';
@@ -1180,15 +1195,40 @@ class Plot {
     const sl = document.createElement('input'); sl.type = 'range'; sl.min = 0; sl.max = UMAX; sl.step = 1; sl.value = 0;
     sl.id = 'k-' + (this.cfg.id || Math.random().toString(36).slice(2, 8)); lab.htmlFor = sl.id;
     sl.addEventListener('input', () => { this.stopPlay(); this.setK(this.uToK(+sl.value), true); });
+    // the readout is an input: type a gain and press Enter (or click away) to jump there
     const kv = document.createElement('span'); kv.className = 'kval';
+    const kpre = document.createElement('span'); kpre.className = 'kpre';
+    const kin = document.createElement('input'); kin.type = 'text'; kin.className = 'kin'; kin.id = sl.id + '-value';
+    kin.inputMode = 'decimal'; kin.spellcheck = false; kin.autocomplete = 'off';
+    kin.setAttribute('aria-label', 'Gain K. Type a value and press Enter.'); kin.title = 'Type a value for K, then press Enter';
+    kv.append(kpre, kin);
+    let shown = '';
+    const commit = () => {
+      if (kin.value.trim() === shown) return true;
+      const v = parseGain(kin.value, this.negative);
+      if (v == null) {
+        kin.classList.add('bad'); setTimeout(() => kin.classList.remove('bad'), 900);
+        kin.value = shown; return false;
+      }
+      this.stopPlay(); this.setK(v);
+      shown = kin.value = fmtK(this.g);
+      return true;
+    };
+    kin.addEventListener('focus', () => { this.stopPlay(); shown = kin.value = fmtK(this.g); kin.select(); });
+    kin.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(); kin.select(); }
+      else if (e.key === 'Escape') { e.preventDefault(); kin.value = shown; kin.blur(); }
+    });
+    kin.addEventListener('blur', () => { commit(); kin.value = fmtK(this.g); });
     const chip = document.createElement('span'); chip.className = 'chip';
     row.append(play, lab, sl, kv, chip);
     this.host.appendChild(row);
-    Object.assign(this, { slider: sl, kval: kv, chip, playBtn: play });
+    Object.assign(this, { slider: sl, kval: kv, kpre, kin, chip, playBtn: play });
   }
   updateControls() {
     if (!this.kval) return;
-    this.kval.textContent = (this.negative ? 'K = −' : 'K = ') + fmtK(this.g);
+    this.kpre.textContent = this.negative ? 'K = −' : 'K = ';
+    if (document.activeElement !== this.kin) this.kin.value = fmtK(this.g);
     const s = this.status;
     this.chip.textContent = s; this.chip.className = 'chip ' + (s === 'stable' ? 'ok' : s === 'marginal' ? 'warn' : 'bad');
   }
